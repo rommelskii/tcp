@@ -39,9 +39,13 @@ int main() {
 	printf("Currently listening at port %d\n", PORT);
 
 	//accept logic
-	/*
-	new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&
-	*/
+	int new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&address_length);
+
+	if (new_socket < 0) {
+		perror("Error accepting the inbound packet. Exiting...\n");
+		exit(EXIT_FAILURE);
+	}
+
 
 	close(server_fd);
 	return 0;
