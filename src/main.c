@@ -5,11 +5,12 @@
 #include <unistd.h>
 
 #define PORT 8080
-#define BACKLOG 10 //10 
+#define BACKLOG 10 //10 maximum in queue
 
 int main() {
-	int server_fd;
 	struct sockaddr_in address; 
+	int server_fd;
+	int address_length = sizeof(address);
 
 	server_fd = socket(AF_INET, SOCK_STREAM, 0); 
 	if (server_fd == -1) {
@@ -21,7 +22,7 @@ int main() {
 	address.sin_addr.s_addr = INADDR_ANY;
 	address.sin_port = htons(PORT);
 	
-	if ( bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0 ) {
+	if ( bind(server_fd, (struct sockaddr*)&address, address_length) < 0 ) {
 		perror("Error binding socket. Exiting...\n");
 		exit(EXIT_FAILURE);
 	}
@@ -37,7 +38,11 @@ int main() {
 
 	printf("Currently listening at port %d\n", PORT);
 
-	close(server_fd);
+	//accept logic
+	/*
+	new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&
+	*/
 
+	close(server_fd);
 	return 0;
 }
