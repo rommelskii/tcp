@@ -3,6 +3,6 @@
 #include "router.h"
 
 void router() {
-	printf("Working Router entry point.");
+	printf("Working Router entry point.\n");
 }
 
