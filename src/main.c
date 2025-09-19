@@ -41,7 +41,7 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 
-	printf("Successfully boudn socket to port %d\n", PORT);
+	printf("Successfully bound socket to port %d\n", PORT);
 
 
 	// listening state 
