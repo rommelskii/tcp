@@ -3,14 +3,20 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <string.h>
 
 #define PORT 8080
 #define BACKLOG 10 //10 maximum in queue
+#define BUFFER_SIZE 1024		   
 
 int main() {
 	struct sockaddr_in address; 
 	int server_fd;
 	int address_length = sizeof(address);
+
+	char buf[BUFFER_SIZE];
+
+	memset(buf, 0, BUFFER_SIZE); //initialize buffer to 0
 
 	server_fd = socket(AF_INET, SOCK_STREAM, 0); 
 	if (server_fd == -1) {
@@ -39,13 +45,21 @@ int main() {
 	printf("Currently listening at port %d\n", PORT);
 
 	//accept logic
-	int new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&address_length);
+	while (1) {
+		int new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&address_length);
 
-	if (new_socket < 0) {
-		perror("Error accepting the inbound packet. Exiting...\n");
-		exit(EXIT_FAILURE);
+		if (new_socket < 0) {
+			perror("Error accepting the inbound packet. Exiting...\n");
+			continue;
+		}
+
+		ssize_t bytes_received = recv(new_socket, buf, BUFFER_SIZE, 0);
+		printf("Bytes received: %li\nContent: %s\n", bytes_received, buf);
+
+
+		close(new_socket);
+
 	}
-
 
 	close(server_fd);
 	return 0;
