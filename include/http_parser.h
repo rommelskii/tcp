@@ -9,7 +9,7 @@ description: (temporary)
 
 */
 
-void http_parser();
+int http_parser();
 
 #endif HTTP_PARSER_H
 
