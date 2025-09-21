@@ -5,6 +5,7 @@
 #include <stddef.h> 	// For ptrdiff_t
 
 #include "lexer.h" 	// Header file for the lexer components and token/token_list data types
+#include "hashmap.h"	// Header file for the hashmap implementation in the tokenization
 
 #define BUF_SIZE 1024 	// maximum buffer size of 1024 bytes
 
