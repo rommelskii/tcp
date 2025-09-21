@@ -1,39 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> // For strlen()
-#include <ctype.h>  // For isspace()
-#include <stddef.h> // For ptrdiff_t
+#include <string.h> 	// For strlen()
+#include <ctype.h>  	// For isspace()
+#include <stddef.h> 	// For ptrdiff_t
 
-#define BUF_SIZE 1024
+#include "lexer.h" 	// Header file for the lexer components and token/token_list data types
 
-
-// note: this is still a prototype version.
-
-/*
- * file: lexer.c
- * description: implementation file for the lexer with definitions
- *              of the tokens 
- */
-
-
-typedef enum {
-	HTTP_METHOD,
-	HTTP_ROUTE,
-	HTTP_VERSION,
-	HTTP_INVALID
-} TokenType;
-
-typedef struct Token {
-	char* str;
-	struct Token* next;
-	TokenType type;
-} Token;
-
-typedef struct {
-	Token* head;
-	Token* tail;
-	size_t size;
-} TokenList;
+#define BUF_SIZE 1024 	// maximum buffer size of 1024 bytes
 
 TokenList* create_token_list() {
 	TokenList* tl = (TokenList*)malloc(sizeof(TokenList));
@@ -41,27 +14,6 @@ TokenList* create_token_list() {
 	tl->tail = NULL;
 	tl->size = 0;
 	return tl;
-}
-
-Token* create_token(char* s, TokenType t_type) {
-	Token* new_token = (Token*)malloc(sizeof(Token));
-	new_token->next = NULL;
-	new_token->str = s;
-	new_token->type = t_type;
-	return new_token;
-}
-
-Token* add_token_to_list(TokenList* token_list, Token* token) {
-	if (token_list->size == 0) {
-		token_list->head = token;
-		token_list->tail = token_list->head;
-	} else {
-		Token* last_element = token_list->tail;
-		last_element->next = token;
-		token_list->tail = last_element->next;
-	}
-	token_list->size++;
-	return token_list->tail;
 }
 
 TokenList* build_token_list(char* source_string) {
@@ -95,13 +47,46 @@ TokenList* build_token_list(char* source_string) {
 	return NULL;
 }
 
-void test() {
-	char* s = "Hello world";
-	TokenList* tl = build_token_list(s);
+
+Token* create_token(char* s, TokenType t_type) {
+	Token* new_token = (Token*)malloc(sizeof(Token));
+	new_token->next = NULL;
+	new_token->str = s;
+	new_token->type = t_type;
+	return new_token;
+}
+
+Token* add_token_to_list(TokenList* token_list, Token* token) {
+	if (token_list->size == 0) {
+		token_list->head = token;
+		token_list->tail = token_list->head;
+	} else {
+		Token* last_element = token_list->tail;
+		last_element->next = token;
+		token_list->tail = last_element->next;
+	}
+	token_list->size++;
+	return token_list->tail;
 }
 
 
-int main() {
-	test();	
-	return 0;
+void delete_token_list(TokenList* tl) {
+	if (tl->size == 0) {
+		perror("Deletion error: size is 0\n");
+		return;
+	}
+	Token* current_token = tl->head;
+	Token* next_token; 
+
+	while (current_token != NULL) {
+		next_token = current_token->next;
+		free(current_token->str); //free the token's string content first
+		free(current_token);
+		current_token = next_token;
+	}
+
+	tl->head = NULL;
+	tl->tail = NULL;
+	tl->size = 0;
+	// don't forget to call free(tl) on the invoker function
 }
