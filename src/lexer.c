@@ -7,6 +7,8 @@
 #define BUF_SIZE 1024
 
 
+// note: this is still a prototype version.
+
 /*
  * file: lexer.c
  * description: implementation file for the lexer with definitions
