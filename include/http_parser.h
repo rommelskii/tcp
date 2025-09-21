@@ -11,5 +11,5 @@ description: (temporary)
 
 int http_parser();
 
-#endif HTTP_PARSER_H
+#endif // HTTP_PARSER_H
 
