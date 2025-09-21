@@ -17,6 +17,7 @@ TokenList* create_token_list() {
 }
 
 TokenList* build_token_list(char* source_string) {
+	TokenList* tl = create_token_list(); // initialize token list
 	char buf[BUF_SIZE];
 	memset(buf, 0, BUF_SIZE);
 
@@ -42,6 +43,11 @@ TokenList* build_token_list(char* source_string) {
 
 		ptrdiff_t length = it - start;
 		snprintf(buf, BUF_SIZE, "%.*s", (int)length, start);
+
+		// begin entry point for tokenization
+		TokenType token_type = tokenize_string(buf);
+		Token* new_token = create_token(buf, token_type);
+		add_token_to_list(tl, new_token);
 	}
 
 	return NULL;
@@ -90,3 +96,8 @@ void delete_token_list(TokenList* tl) {
 	tl->size = 0;
 	// don't forget to call free(tl) on the invoker function
 }
+
+TokenType tokenize_string(char* buf) {
+	
+}
+

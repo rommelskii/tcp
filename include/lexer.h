@@ -4,7 +4,7 @@
 /*
  * file: lexer.h
  * description: header file for the lexer with definitions
- *              of the tokens 
+ *              of the tokens, token lists, and the helper functions for creating the said structures.
  */
 
 
@@ -81,5 +81,12 @@ Token* 		add_token_to_list(TokenList* token_list, Token* token);
  * @param tl The pointer to the token list to be deleted.
  */
 void 		delete_token_list(TokenList* tl);
+
+/**
+ * @brief Given a string, it will output the corresponding token type.
+ * @param buf Pointer to the buffer in the main entry point.
+ * @return The token type of the current buffer content.
+ */
+TokenType	tokenize_string(char* buf);
 
 #endif // LEXER_H
