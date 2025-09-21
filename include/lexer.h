@@ -14,10 +14,18 @@
  */
 
 typedef enum {
-	HTTP_METHOD, 	///< GET, POST, etc.
-	HTTP_ROUTE, 	///< /, /home/, etc.
-	HTTP_VERSION,	///< HTTP/1.1, etc.
-	HTTP_INVALID	///< any token that is none of the defined token types
+	TOKEN_METHOD,
+	TOKEN_URI,
+	TOKEN_VERSION,
+	TOKEN_HEADER_KEY,
+	TOKEN_HEADER_VALUE,
+	TOKEN_BODY,
+	TOKEN_COLON,
+	TOKEN_SPACE,
+	TOKEN_CRLF,
+	TOKEN_END_OF_HEADERS,
+	TOKEN_EOF,
+	TOKEN_ILLEGAL
 } TokenType;
 
 /**
