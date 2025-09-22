@@ -1,9 +1,11 @@
 #ifndef HASHMAP_H
 #define HASHMAP_H
 
+#include "lexer.h"
+
 typedef struct Entry {
     char* key;
-    int value;
+    TokenType t_type;
     struct Entry* next;
 } Entry;
 
@@ -15,9 +17,11 @@ unsigned long 	hash_function(const char* str);
 
 HashMap* 	hashmap_create();
 
-void 		hashmap_set(HashMap* map, const char* key, int value);
+HashMap*	lut_create(); 
 
-int 		hashmap_get(HashMap* map, const char* key);
+void 		hashmap_set(HashMap* map, const char* key, TokenType t_type);
+
+TokenType 	hashmap_get(HashMap* map, const char* key);
 
 void 		hashmap_destroy(HashMap* map);
 
