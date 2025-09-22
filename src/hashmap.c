@@ -7,17 +7,6 @@
 
 #define TABLE_SIZE 10
 
-typedef struct Entry {
-    char* key;
-    int value;
-    struct Entry* next;
-} Entry;
-
-typedef struct {
-    Entry** buckets; // An array of pointers to Entry
-} HashMap;
-
-// 3. The hash function (a simple, common algorithm called djb2)
 unsigned long hash_function(const char* str) {
     unsigned long hash = 5381;
     int c;
