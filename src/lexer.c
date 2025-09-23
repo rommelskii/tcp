@@ -3,11 +3,25 @@
 #include <string.h> 	// For strlen()
 #include <ctype.h>  	// For isspace()
 #include <stddef.h> 	// For ptrdiff_t
+#include <curl/curl.h>	// For curl_url tools (URI validation)
 
 #include "lexer.h" 	// Header file for the lexer components and token/token_list data types
 #include "hashmap.h"	// Header file for the hashmap implementation in the tokenization
 
 #define BUF_SIZE 1024 	// maximum buffer size of 1024 bytes
+			//
+
+int is_uri(char* str) {
+	CURLU *url = curl_url();
+	if (!url) {
+		return 0;
+	}
+
+	CURLUcode rc = curl_url_set(url, CURLUPART_URL, str, 0);
+	curl_url_cleanup(url);
+
+	return (rc == CURLUE_OK);
+}
 
 TokenList* create_token_list() {
 	TokenList* tl = (TokenList*)malloc(sizeof(TokenList));
@@ -19,6 +33,7 @@ TokenList* create_token_list() {
 
 TokenList* build_token_list(char* source_string) {
 	TokenList* tl = create_token_list(); // initialize token list
+	HashMap* lut = lut_create();
 	char buf[BUF_SIZE];
 	memset(buf, 0, BUF_SIZE);
 
@@ -46,31 +61,38 @@ TokenList* build_token_list(char* source_string) {
 		snprintf(buf, BUF_SIZE, "%.*s", (int)length, start);
 
 		// begin entry point for tokenization
-		TokenType token_type = tokenize_string(buf);
+		TokenType token_type = tokenize_string(buf, lut);
 		Token* new_token = create_token(buf, token_type);
 		add_token_to_list(tl, new_token);
 	}
 
-	return NULL;
+	return tl;
 }
 
 
 Token* create_token(char* s, TokenType t_type) {
 	Token* new_token = (Token*)malloc(sizeof(Token));
 	new_token->next = NULL;
-	new_token->str = s;
+	new_token->prev = NULL;
 	new_token->type = t_type;
+
+	new_token->str = (char*)malloc(strlen(s)+1);
+	strcpy(new_token->str, s);
+
 	return new_token;
 }
 
 Token* add_token_to_list(TokenList* token_list, Token* token) {
+	if (token_list == NULL || token == NULL) {
+		return NULL;
+	}
 	if (token_list->size == 0) {
 		token_list->head = token;
-		token_list->tail = token_list->head;
+		token_list->tail = token;
 	} else {
-		Token* last_element = token_list->tail;
-		last_element->next = token;
-		token_list->tail = last_element->next;
+		token_list->tail->next = token;
+		token->prev = token_list->tail;
+		token_list->tail = token;
 	}
 	token_list->size++;
 	return token_list->tail;
@@ -98,7 +120,41 @@ void delete_token_list(TokenList* tl) {
 	// don't forget to call free(tl) on the invoker function
 }
 
-TokenType tokenize_string(char* buf) {
+void print_token_list(TokenList* tl) {
+	if (tl->size == 0) {
+		printf("Token list is empty.");
+	} 
+
+	printf("Size of token list: %zu\n", tl->size);
 	
+	Token* it = tl->head;
+	while (it != NULL) {
+		switch(it->type) {
+			case TOKEN_METHOD:
+				printf("String: %s Type: Method\n", it->str);
+				break;
+			case TOKEN_URI:
+				printf("String: %s Type: URI\n", it->str);
+				break;
+			case TOKEN_VERSION:
+				printf("String: %s Type: Version\n", it->str);
+				break;
+			case TOKEN_ILLEGAL:
+				printf("String: %s Type: Illegal\n", it->str);
+				break;
+		}
+		it = it->next;
+	}
 }
 
+TokenType tokenize_string(char* buf, HashMap* lut) {
+	TokenType t_type = hashmap_get(lut, buf);	//LUT access
+	if (t_type == TOKEN_INTERMEDIATE) {		//LUT miss handler
+		if (is_uri(buf) == 0) {
+			t_type = TOKEN_ILLEGAL;
+		} else {
+			t_type = TOKEN_URI;
+		}
+	}
+	return t_type;
+}

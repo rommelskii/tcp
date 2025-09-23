@@ -5,10 +5,26 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "hashmap.h"
+#include "lexer.h"
+
 #define PORT 8080
 #define BACKLOG 10 //10 maximum in queue
 #define BUFFER_SIZE 1024		   
 
+void test_tokenize() {
+	HashMap* lut = lut_create();	
+	char* src = "GET http://localhost:8080 HTTP/1.1";
+	TokenList* tl = build_token_list(src);
+
+	print_token_list(tl);
+}
+
+int main(void) {
+	test_tokenize();
+}
+
+/*
 int main() {
 	struct sockaddr_in address; 
 	int server_fd;
@@ -72,3 +88,4 @@ int main() {
 	close(server_fd);
 	return 0;
 }
+*/

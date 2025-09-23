@@ -9,7 +9,7 @@ typedef struct Entry {
     struct Entry* next;
 } Entry;
 
-typedef struct {
+typedef struct HashMap {
     Entry** buckets; // An array of pointers to Entry
 } HashMap;
 

@@ -1,12 +1,14 @@
 #ifndef LEXER_H
 #define LEXER_H
 
+
 /*
  * file: lexer.h
  * description: header file for the lexer with definitions
  *              of the tokens, token lists, and the helper functions for creating the said structures.
  */
 
+typedef struct HashMap HashMap;
 
 /**
  * @brief An enumeration of the possible token types of inbound HTTP requests.
@@ -25,7 +27,8 @@ typedef enum {
 	TOKEN_CRLF,
 	TOKEN_END_OF_HEADERS,
 	TOKEN_EOF,
-	TOKEN_ILLEGAL
+	TOKEN_ILLEGAL, 
+	TOKEN_INTERMEDIATE,
 } TokenType;
 
 /**
@@ -36,6 +39,7 @@ typedef enum {
 typedef struct Token {
 	char* str;
 	struct Token* next;
+	struct Token* prev;
 	TokenType type;
 } Token;
 
@@ -50,6 +54,8 @@ typedef struct {
 	Token* tail;
 	size_t size;
 } TokenList;
+
+int is_uri(char* str);
 
 /**
  * @brief Creates a token list. 
@@ -90,11 +96,8 @@ Token* 		add_token_to_list(TokenList* token_list, Token* token);
  */
 void 		delete_token_list(TokenList* tl);
 
-/**
- * @brief Given a string, it will output the corresponding token type.
- * @param buf Pointer to the buffer in the main entry point.
- * @return The token type of the current buffer content.
- */
-TokenType	tokenize_string(char* buf);
+void 		print_token_list(TokenList* tl);
+
+TokenType	tokenize_string(char* buf, HashMap* lut);
 
 #endif // LEXER_H
