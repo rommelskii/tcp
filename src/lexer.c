@@ -49,46 +49,45 @@ TokenList* build_token_list(char* source_string) {
 	TokenType prev_token = 0;
 	Token* new_token;
 
+	/*
+	 * Tokenization entry point
+	 */
 	while ( *it != '\0' ) {
-		while ( isspace(*it) ) {
+		if ( isspace(*it) ) { // check for spaces
 			new_token = create_token(" ", TOKEN_SPACE);
 			add_token_to_list(tl, new_token);
 			++it;
 		}
-		if ( *it == ':' ) {
+		else if ( *it == ':' ) { // check for colons
 			new_token = create_token(":", TOKEN_COLON);
 			add_token_to_list(tl, new_token);
-			break;	
-		}
-		if ( *it == '\0' ) {
-			new_token = create_token("\0", TOKEN_EOF);
-			add_token_to_list(tl, new_token);
-			break;	
-		}
-
-		start = it;
-		while ( *it != '\0' && !isspace(*it) && *it != ":") {
 			++it;
-		}
-
-		ptrdiff_t length = it - start;
-		snprintf(buf, BUF_SIZE, "%.*s", (int)length, start);
-
-		// begin entry point for tokenization
-		token_type = tokenize_string(buf, lut);
-		if (token_type == TOKEN_ILLEGAL) {
-			switch (prev_token)  {
-				case TOKEN_METHOD:
-					token_type = TOKEN_URI;
-					break;
-				case TOKEN_HEADER_KEY:
-					token_type = TOKEN_HEADER_VALUE;
-					break;
+			continue;
+		} else { 		
+			// otherwise, begin keyword extraction
+			start = it;
+			while ( *it != '\0' && !isspace(*it) && *it != ':') {
+				++it;
 			}
+			ptrdiff_t length = it - start;
+			snprintf(buf, BUF_SIZE, "%.*s", (int)length, start);
+
+			// begin entry point for tokenization
+			token_type = tokenize_string(buf, lut);
+			if (token_type == TOKEN_ILLEGAL) {
+				switch (prev_token)  {
+					case TOKEN_METHOD:
+						token_type = TOKEN_URI;
+						break;
+					case TOKEN_HEADER_KEY:
+						token_type = TOKEN_HEADER_VALUE;
+						break;
+				}
+			}
+			prev_token = token_type;
+			Token* new_token = create_token(buf, token_type);
+			add_token_to_list(tl, new_token);
 		}
-		prev_token = token_type;
-		Token* new_token = create_token(buf, token_type);
-		add_token_to_list(tl, new_token);
 	}
 
 	return tl;
@@ -163,6 +162,30 @@ void print_token_list(TokenList* tl) {
 				break;
 			case TOKEN_VERSION:
 				printf("String: %s Type: Version\n", it->str);
+				break;
+			case TOKEN_HEADER_KEY:
+				printf("String: %s Type: Header Key\n", it->str);
+				break;
+			case TOKEN_HEADER_VALUE:
+				printf("String: %s Type: Header Value\n", it->str);
+				break;
+			case TOKEN_BODY:
+				printf("String: %s Type: Body\n", it->str);
+				break;
+			case TOKEN_COLON:
+				printf("String: %s Type: Colon\n", it->str);
+				break;
+			case TOKEN_SPACE:
+				printf("String: %s Type: Space\n", it->str);
+				break;
+			case TOKEN_CRLF:
+				printf("String: %s Type: CRLF\n", it->str);
+				break;
+			case TOKEN_END_OF_HEADERS:
+				printf("String: %s Type: End of Headers\n", it->str);
+				break;
+			case TOKEN_EOF:
+				printf("String: %s Type: EOF\n", it->str);
 				break;
 			case TOKEN_ILLEGAL:
 				printf("String: %s Type: Illegal\n", it->str);

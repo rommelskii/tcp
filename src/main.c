@@ -12,6 +12,7 @@
 #define BACKLOG 10 //10 maximum in queue
 #define BUFFER_SIZE 1024		   
 
+/*
 void test_tokenize() {
 	HashMap* lut = lut_create();	
 	char* src = "GET http://localhost:8080 HTTP/1.1";
@@ -23,8 +24,8 @@ void test_tokenize() {
 int main(void) {
 	test_tokenize();
 }
+*/
 
-/*
 int main() {
 	struct sockaddr_in address; 
 	int server_fd;
@@ -78,8 +79,14 @@ int main() {
 		}
 
 		ssize_t bytes_received = recv(new_socket, buf, BUFFER_SIZE, 0);
-		printf("Bytes received: %li\nContent: %s\n", bytes_received, buf);
-
+		if ( bytes_received > 0 ) {
+			buf[bytes_received] = '\0';
+			TokenList* tl = build_token_list(buf);
+			print_token_list(tl);
+		} else {
+			perror("recv failed");
+		}
+		//printf("Bytes received: %li\nContent: %s\n", bytes_received, buf);
 
 		close(new_socket);
 
@@ -88,4 +95,3 @@ int main() {
 	close(server_fd);
 	return 0;
 }
-*/
