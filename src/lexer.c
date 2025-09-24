@@ -52,43 +52,6 @@ TokenList* build_token_list(char* source_string) {
 	/*
 	 * Tokenization entry point
 	 */
-	while ( *it != '\0' ) {
-		if ( isspace(*it) ) { // check for spaces
-			new_token = create_token(" ", TOKEN_SPACE);
-			add_token_to_list(tl, new_token);
-			++it;
-		}
-		else if ( *it == ':' ) { // check for colons
-			new_token = create_token(":", TOKEN_COLON);
-			add_token_to_list(tl, new_token);
-			++it;
-			continue;
-		} else { 		
-			// otherwise, begin keyword extraction
-			start = it;
-			while ( *it != '\0' && !isspace(*it) && *it != ':') {
-				++it;
-			}
-			ptrdiff_t length = it - start;
-			snprintf(buf, BUF_SIZE, "%.*s", (int)length, start);
-
-			// begin entry point for tokenization
-			token_type = tokenize_string(buf, lut);
-			if (token_type == TOKEN_ILLEGAL) {
-				switch (prev_token)  {
-					case TOKEN_METHOD:
-						token_type = TOKEN_URI;
-						break;
-					case TOKEN_HEADER_KEY:
-						token_type = TOKEN_HEADER_VALUE;
-						break;
-				}
-			}
-			prev_token = token_type;
-			Token* new_token = create_token(buf, token_type);
-			add_token_to_list(tl, new_token);
-		}
-	}
 
 	return tl;
 }
