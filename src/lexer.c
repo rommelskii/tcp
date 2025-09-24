@@ -45,15 +45,29 @@ TokenList* build_token_list(char* source_string) {
 	char* it = source_string;
 	char* start = NULL;
 
+	TokenType token_type;
+	TokenType prev_token = 0;
+	Token* new_token;
+
 	while ( *it != '\0' ) {
 		while ( isspace(*it) ) {
+			new_token = create_token(" ", TOKEN_SPACE);
+			add_token_to_list(tl, new_token);
 			++it;
 		}
-		if ( *it == '\0' ) {
+		if ( *it == ':' ) {
+			new_token = create_token(":", TOKEN_COLON);
+			add_token_to_list(tl, new_token);
 			break;	
 		}
+		if ( *it == '\0' ) {
+			new_token = create_token("\0", TOKEN_EOF);
+			add_token_to_list(tl, new_token);
+			break;	
+		}
+
 		start = it;
-		while ( *it != '\0' && !isspace(*it) ) {
+		while ( *it != '\0' && !isspace(*it) && *it != ":") {
 			++it;
 		}
 
@@ -61,7 +75,18 @@ TokenList* build_token_list(char* source_string) {
 		snprintf(buf, BUF_SIZE, "%.*s", (int)length, start);
 
 		// begin entry point for tokenization
-		TokenType token_type = tokenize_string(buf, lut);
+		token_type = tokenize_string(buf, lut);
+		if (token_type == TOKEN_ILLEGAL) {
+			switch (prev_token)  {
+				case TOKEN_METHOD:
+					token_type = TOKEN_URI;
+					break;
+				case TOKEN_HEADER_KEY:
+					token_type = TOKEN_HEADER_VALUE;
+					break;
+			}
+		}
+		prev_token = token_type;
 		Token* new_token = create_token(buf, token_type);
 		add_token_to_list(tl, new_token);
 	}
@@ -149,12 +174,5 @@ void print_token_list(TokenList* tl) {
 
 TokenType tokenize_string(char* buf, HashMap* lut) {
 	TokenType t_type = hashmap_get(lut, buf);	//LUT access
-	if (t_type == TOKEN_INTERMEDIATE) {		//LUT miss handler
-		if (is_uri(buf) == 0) {
-			t_type = TOKEN_ILLEGAL;
-		} else {
-			t_type = TOKEN_URI;
-		}
-	}
 	return t_type;
 }

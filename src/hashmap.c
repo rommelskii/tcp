@@ -131,7 +131,7 @@ TokenType hashmap_get(HashMap* map, const char* key) {
         current = current->next;
     }
 
-    return TOKEN_INTERMEDIATE;
+    return TOKEN_ILLEGAL;
 }
 
 // Frees all memory used by the hash map
