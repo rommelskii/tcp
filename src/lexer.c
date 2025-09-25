@@ -22,7 +22,7 @@ TokenList* create_token_list() {
  * @brief Tokenization entry point
  */
 
-TokenList* build_token_list(char* source_string, size_t end_of_buffer) {
+TokenList* build_token_list(char* source_string, char* end_of_buffer) {
 	TokenList* tl = create_token_list(); // initialize token list
 	HashMap* lut = lut_create();
 	char buf[BUF_SIZE];
