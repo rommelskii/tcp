@@ -10,18 +10,6 @@
 
 #define BUF_SIZE 1024 	// maximum buffer size of 1024 bytes
 
-int is_uri(char* str) {
-	CURLU *url = curl_url();
-	if (!url) {
-		return 0;
-	}
-
-	CURLUcode rc = curl_url_set(url, CURLUPART_URL, str, 0);
-	curl_url_cleanup(url);
-
-	return (rc == CURLUE_OK);
-}
-
 TokenList* create_token_list() {
 	TokenList* tl = (TokenList*)malloc(sizeof(TokenList));
 	tl->head = NULL;
@@ -34,7 +22,7 @@ TokenList* create_token_list() {
  * @brief Tokenization entry point
  */
 
-TokenList* build_token_list(char* source_string) {
+TokenList* build_token_list(char* source_string, size_t end_of_buffer) {
 	TokenList* tl = create_token_list(); // initialize token list
 	HashMap* lut = lut_create();
 	char buf[BUF_SIZE];

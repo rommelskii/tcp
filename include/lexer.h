@@ -77,9 +77,10 @@ TokenList* 	create_token_list();
  * This function utilizes the lexer in determining the token type.
  *
  * @param source_string A pointer to a null-terminated character array/string. 
+ * @param end_of_buffer A pointer to the end of the buffer based on the bytes received by recv
  * @return A pointer to the newly created token list.
  */
-TokenList* 	build_token_list(char* source_string);
+TokenList* 	build_token_list(char* source_string, const char* end_of_buffer);
 
 /**
  * @brief Creates an individual token with a defined string s and token type t_type.

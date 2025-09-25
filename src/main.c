@@ -81,7 +81,8 @@ int main() {
 		ssize_t bytes_received = recv(new_socket, buf, BUFFER_SIZE, 0);
 		if ( bytes_received > 0 ) {
 			buf[bytes_received] = '\0';
-			TokenList* tl = build_token_list(buf);
+			const char* end_of_buffer = buf+bytes_received;
+			TokenList* tl = build_token_list(buf, end_of_buffer);
 			print_token_list(tl);
 			printf("%s\n", buf);
 		} else {
