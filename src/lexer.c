@@ -22,7 +22,7 @@ TokenList* create_token_list() {
  * @brief Tokenization entry point
  */
 
-TokenList* build_token_list(char* source_string, char* end_of_buffer) {
+TokenList* build_token_list(char* source_string, const char* end_of_buffer) {
 	TokenList* tl = create_token_list(); // initialize token list
 	HashMap* lut = lut_create();
 	char buf[BUF_SIZE];
@@ -40,22 +40,23 @@ TokenList* build_token_list(char* source_string, char* end_of_buffer) {
 	TokenType token_type = TOKEN_INITIAL;
 	Token* current_token = NULL;
 	ptrdiff_t keyword_size = 0;
+	char* crlf_endptr = NULL;
 	
 	/*
 	 * Tokenization entry point
 	 * Note: can be made cleaner by creating a helper function for next-word extraction
 	 */
-	while ( *it != '\0' ) {
+	while ( *it != '\0' && it < end_of_buffer ) {
 		switch (lexer_state) {
 			case STATE_REQUEST_LINE:
 				/*
 				 * Stage 1: find the method (first token)
 				 */
-				while ( isspace(*it) ) { // skip spaces and colons
+				while ( isspace(*it) && it < end_of_buffer ) { // skip spaces and colons
 					++it;
 				}
 				start = it; //start of the first keyword
-				while ( !isspace(*it) ) { // set points to mark endpoints of first keyword
+				while ( !isspace(*it) && it < end_of_buffer ) { // set points to mark endpoints of first keyword
 					++it;	
 				}
 
@@ -68,11 +69,11 @@ TokenList* build_token_list(char* source_string, char* end_of_buffer) {
 				/*
 				 * URI extraction 
 				 */
-				while ( isspace(*it) ) { 
+				while ( isspace(*it) && it < end_of_buffer ) { 
 					++it;
 				}
 				start = it;
-				while ( !isspace(*it) ) {
+				while ( !isspace(*it) && it < end_of_buffer ) {
 					++it;	
 				}
 				keyword_size = it - start;
@@ -85,11 +86,11 @@ TokenList* build_token_list(char* source_string, char* end_of_buffer) {
 				/*
 				 * HTTP protocol version extraction
 				 */
-				while ( isspace(*it) ) { 
+				while ( isspace(*it) && it < end_of_buffer ) { 
 					++it;
 				}
 				start = it;
-				while ( !isspace(*it) ) {
+				while ( !isspace(*it) && it < end_of_buffer ) {
 					++it;	
 				}
 				keyword_size = it - start;
@@ -112,13 +113,63 @@ TokenList* build_token_list(char* source_string, char* end_of_buffer) {
 				lexer_state = STATE_HEADERS; 
 				break;
 			case STATE_HEADERS:
-				++it;// temp
+				crlf_endptr = it + 4; //a double CRLF is four characters wide
+				if (crlf_endptr > end_of_buffer) { // check if endptr is within bounds
+					printf("Buffer overread detected! Tokenization ending...\n");
+					lexer_state = STATE_INVALID;
+				}
+				snprintf(buf,sizeof(buf),"%.*s", 4, it);
+				if ( strcmp(buf, "\r\n\r\n") == 0 ) {
+					lexer_state = STATE_BODY;
+				} else {
+					while ( isspace(*it) && it < end_of_buffer ) {
+						++it;
+					}
+					start=it;
+					while ( *it != ':' && it < end_of_buffer ) {
+						++it;
+					}
+					if (it < end_of_buffer) {
+						keyword_size = it - start;
+						snprintf(buf, sizeof(buf), "%.*s", keyword_size, start);
+						token_type = tokenize_string(buf, lut);
+						current_token = create_token(buf, token_type);
+						add_token_to_list(tl, current_token);
+						++it;
+					}
+					while ( isspace(*it) && it < end_of_buffer ) {
+						++it;
+					}
+					if (it < end_of_buffer) {
+						start=it;
+						while ( !isspace(*it) && it < end_of_buffer ) {
+							++it;
+						}
+						keyword_size = it - start;
+						snprintf(buf, sizeof(buf), "%.*s", keyword_size, start);
+						token_type = TOKEN_HEADER_VALUE;
+						current_token = create_token(buf, token_type);
+						add_token_to_list(tl, current_token);
+					}
+					if (it+1 < end_of_buffer) {
+						if ( *it=='\r' && *(it+1)=='\n' ) {
+							token_type = TOKEN_CRLF;	
+							current_token = create_token("\r\n", token_type);
+							add_token_to_list(tl, current_token);
+						} else {
+							lexer_state = STATE_INVALID;
+						}
+					}
+				}
 				break;
 			case STATE_BODY:
+				printf("DOUBLE CRLF DETECTED\n");
+				++it;
 				break;
 			case STATE_END_OF_HEADERS:
 				break;
 			case STATE_INVALID:
+				++it;
 				break;
 		}
 	}
@@ -209,10 +260,10 @@ void print_token_list(TokenList* tl) {
 				printf("String: %s Type: Colon\n", it->str);
 				break;
 			case TOKEN_SPACE:
-				printf("String: %s Type: Space\n", it->str);
+				printf("String: (space) Type: Space\n");
 				break;
 			case TOKEN_CRLF:
-				printf("String: %s Type: CRLF\n", it->str);
+				printf("String: (crlf) Type: CRLF\n");
 				break;
 			case TOKEN_END_OF_HEADERS:
 				printf("String: %s Type: End of Headers\n", it->str);
