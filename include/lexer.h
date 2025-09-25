@@ -10,6 +10,14 @@
 
 typedef struct HashMap HashMap;
 
+typedef enum {
+	STATE_REQUEST_LINE,
+	STATE_HEADERS,
+	STATE_BODY,
+	STATE_END_OF_HEADERS,
+	STATE_INVALID
+} LexerState;
+
 /**
  * @brief An enumeration of the possible token types of inbound HTTP requests.
  * Still in prototyping stage.
@@ -27,7 +35,8 @@ typedef enum {
 	TOKEN_CRLF,
 	TOKEN_END_OF_HEADERS,
 	TOKEN_EOF,
-	TOKEN_ILLEGAL
+	TOKEN_ILLEGAL, 
+	TOKEN_INITIAL
 } TokenType;
 
 /**

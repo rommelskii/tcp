@@ -83,6 +83,7 @@ int main() {
 			buf[bytes_received] = '\0';
 			TokenList* tl = build_token_list(buf);
 			print_token_list(tl);
+			printf("%s\n", buf);
 		} else {
 			perror("recv failed");
 		}

@@ -9,7 +9,6 @@
 #include "hashmap.h"	// Header file for the hashmap implementation in the tokenization
 
 #define BUF_SIZE 1024 	// maximum buffer size of 1024 bytes
-			//
 
 int is_uri(char* str) {
 	CURLU *url = curl_url();
@@ -31,6 +30,10 @@ TokenList* create_token_list() {
 	return tl;
 }
 
+/*
+ * @brief Tokenization entry point
+ */
+
 TokenList* build_token_list(char* source_string) {
 	TokenList* tl = create_token_list(); // initialize token list
 	HashMap* lut = lut_create();
@@ -45,13 +48,92 @@ TokenList* build_token_list(char* source_string) {
 	char* it = source_string;
 	char* start = NULL;
 
-	TokenType token_type;
-	TokenType prev_token = 0;
-	Token* new_token;
-
+	LexerState lexer_state = STATE_REQUEST_LINE;
+	TokenType token_type = TOKEN_INITIAL;
+	Token* current_token = NULL;
+	ptrdiff_t keyword_size = 0;
+	
 	/*
 	 * Tokenization entry point
+	 * Note: can be made cleaner by creating a helper function for next-word extraction
 	 */
+	while ( *it != '\0' ) {
+		switch (lexer_state) {
+			case STATE_REQUEST_LINE:
+				/*
+				 * Stage 1: find the method (first token)
+				 */
+				while ( isspace(*it) ) { // skip spaces and colons
+					++it;
+				}
+				start = it; //start of the first keyword
+				while ( !isspace(*it) ) { // set points to mark endpoints of first keyword
+					++it;	
+				}
+
+				keyword_size = it - start;
+				snprintf(buf, sizeof(buf), "%.*s", keyword_size, start);
+				token_type = tokenize_string(buf, lut);	
+				current_token = create_token(buf, token_type);				
+				add_token_to_list(tl, current_token);
+
+				/*
+				 * URI extraction 
+				 */
+				while ( isspace(*it) ) { 
+					++it;
+				}
+				start = it;
+				while ( !isspace(*it) ) {
+					++it;	
+				}
+				keyword_size = it - start;
+				snprintf(buf, sizeof(buf), "%.*s", keyword_size, start);
+				token_type = TOKEN_URI;
+				current_token = create_token(buf, token_type); // assume URI after method
+									       // unless proven otherwise by parser
+				add_token_to_list(tl, current_token);
+
+				/*
+				 * HTTP protocol version extraction
+				 */
+				while ( isspace(*it) ) { 
+					++it;
+				}
+				start = it;
+				while ( !isspace(*it) ) {
+					++it;	
+				}
+				keyword_size = it - start;
+				snprintf(buf, sizeof(buf), "%.*s", keyword_size, start);
+				token_type = tokenize_string(buf, lut);
+				current_token = create_token(buf, token_type); // assume URI after method
+				add_token_to_list(tl, current_token);
+
+				/*
+				 * CRLF extraction
+				 */
+				if ( *it == '\r' && *(it+1) == '\n' ) {
+					token_type = TOKEN_CRLF;
+					current_token = create_token("\r\n", token_type); 
+					add_token_to_list(tl, current_token);
+					it += 2;
+				} else {
+					lexer_state = STATE_INVALID;
+				}
+				lexer_state = STATE_HEADERS; 
+				break;
+			case STATE_HEADERS:
+				++it;// temp
+				break;
+			case STATE_BODY:
+				break;
+			case STATE_END_OF_HEADERS:
+				break;
+			case STATE_INVALID:
+				break;
+		}
+	}
 
 	return tl;
 }
