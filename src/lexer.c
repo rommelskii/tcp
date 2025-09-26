@@ -7,6 +7,7 @@
 
 #include "lexer.h" 	// Header file for the lexer components and token/token_list data types
 #include "hashmap.h"	// Header file for the hashmap implementation in the tokenization
+#include "buffer.h"
 
 #define BUF_SIZE 1024 	// maximum buffer size of 1024 bytes
 
@@ -22,7 +23,7 @@ TokenList* create_token_list() {
  * @brief Tokenization entry point
  */
 
-TokenList* build_token_list(char* source_string, const char* end_of_buffer) {
+TokenList* build_token_list(char* source_string, const char* end_of_buf) {
 	TokenList* tl = create_token_list(); // initialize token list
 	HashMap* lut = lut_create();
 	char buf[BUF_SIZE];
@@ -44,77 +45,47 @@ TokenList* build_token_list(char* source_string, const char* end_of_buffer) {
 	
 	/*
 	 * Tokenization entry point
-	 * Note: can be made cleaner by creating a helper function for next-word extraction
 	 */
-	while ( *it != '\0' && it < end_of_buffer ) {
+	while ( *it != '\0' && it < end_of_buf ) {
 		switch (lexer_state) {
 			case STATE_REQUEST_LINE:
-				/*
-				 * Stage 1: find the method (first token)
-				 */
-				while ( isspace(*it) && it < end_of_buffer ) { // skip spaces and colons
-					++it;
-				}
-				start = it; //start of the first keyword
-				while ( !isspace(*it) && it < end_of_buffer ) { // set points to mark endpoints of first keyword
-					++it;	
-				}
-
-				keyword_size = it - start;
-				snprintf(buf, sizeof(buf), "%.*s", keyword_size, start);
+        /*
+          * Stage 1: State Request Line
+          * (METHOD) -> (*URI) -> (HTTP VERSION) -> (CRLF)
+        */
+        // method extraction 
+        extract_next_keyword(buf, sizeof(buf), end_of_buf, &it);
 				token_type = tokenize_string(buf, lut);	
 				current_token = create_token(buf, token_type);				
 				add_token_to_list(tl, current_token);
 
-				/*
-				 * URI extraction 
-				 */
-				while ( isspace(*it) && it < end_of_buffer ) { 
-					++it;
-				}
-				start = it;
-				while ( !isspace(*it) && it < end_of_buffer ) {
-					++it;	
-				}
-				keyword_size = it - start;
-				snprintf(buf, sizeof(buf), "%.*s", keyword_size, start);
+        // URI extraction
+        extract_next_keyword(buf, sizeof(buf), end_of_buf, &it);
 				token_type = TOKEN_URI;
 				current_token = create_token(buf, token_type); // assume URI after method
-									       // unless proven otherwise by parser
 				add_token_to_list(tl, current_token);
 
-				/*
-				 * HTTP protocol version extraction
-				 */
-				while ( isspace(*it) && it < end_of_buffer ) { 
-					++it;
-				}
-				start = it;
-				while ( !isspace(*it) && it < end_of_buffer ) {
-					++it;	
-				}
-				keyword_size = it - start;
-				snprintf(buf, sizeof(buf), "%.*s", keyword_size, start);
+        // HTTP version 
+        extract_next_keyword(buf, sizeof(buf), end_of_buf, &it);
 				token_type = tokenize_string(buf, lut);
-				current_token = create_token(buf, token_type); // assume URI after method
+				current_token = create_token(buf, token_type); 
 				add_token_to_list(tl, current_token);
 
-				/*
-				 * CRLF extraction
-				 */
+        // CRLF 
 				if ( *it == '\r' && *(it+1) == '\n' ) {
 					token_type = TOKEN_CRLF;
 					current_token = create_token("\r\n", token_type); 
 					add_token_to_list(tl, current_token);
 					it += 2;
 				} else {
-					lexer_state = STATE_INVALID;
+					lexer_state = STATE_INVALID; // fallback to invalid state if no CRLF 
 				}
 				lexer_state = STATE_HEADERS; 
+
 				break;
 			case STATE_HEADERS:
 				crlf_endptr = it + 4; //a double CRLF is four characters wide
-				if (crlf_endptr > end_of_buffer) { // check if endptr is within bounds
+				if (crlf_endptr > end_of_buf) { // check if endptr is within bounds
 					printf("Buffer overread detected! Tokenization ending...\n");
 					lexer_state = STATE_INVALID;
 				}
@@ -122,14 +93,14 @@ TokenList* build_token_list(char* source_string, const char* end_of_buffer) {
 				if ( strcmp(buf, "\r\n\r\n") == 0 ) {
 					lexer_state = STATE_BODY;
 				} else {
-					while ( isspace(*it) && it < end_of_buffer ) {
+					while ( isspace(*it) && it < end_of_buf ) {
 						++it;
 					}
 					start=it;
-					while ( *it != ':' && it < end_of_buffer ) {
+					while ( *it != ':' && it < end_of_buf ) {
 						++it;
 					}
-					if (it < end_of_buffer) {
+					if (it < end_of_buf) {
 						keyword_size = it - start;
 						snprintf(buf, sizeof(buf), "%.*s", keyword_size, start);
 						token_type = tokenize_string(buf, lut);
@@ -137,12 +108,12 @@ TokenList* build_token_list(char* source_string, const char* end_of_buffer) {
 						add_token_to_list(tl, current_token);
 						++it;
 					}
-					while ( isspace(*it) && it < end_of_buffer ) {
+					while ( isspace(*it) && it < end_of_buf ) {
 						++it;
 					}
-					if (it < end_of_buffer) {
+					if (it < end_of_buf) {
 						start=it;
-						while ( !isspace(*it) && it < end_of_buffer ) {
+						while ( !isspace(*it) && it < end_of_buf ) {
 							++it;
 						}
 						keyword_size = it - start;
@@ -151,7 +122,7 @@ TokenList* build_token_list(char* source_string, const char* end_of_buffer) {
 						current_token = create_token(buf, token_type);
 						add_token_to_list(tl, current_token);
 					}
-					if (it+1 < end_of_buffer) {
+					if (it+1 < end_of_buf) {
 						if ( *it=='\r' && *(it+1)=='\n' ) {
 							token_type = TOKEN_CRLF;	
 							current_token = create_token("\r\n", token_type);
