@@ -22,7 +22,6 @@ TokenList* create_token_list() {
 /*
  * @brief Tokenization entry point
  */
-
 TokenList* build_token_list(char* source_string, const char* end_of_buf) {
 	TokenList* tl = create_token_list(); // initialize token list
 	HashMap* lut = lut_create();
@@ -35,12 +34,10 @@ TokenList* build_token_list(char* source_string, const char* end_of_buf) {
 	}
 	
 	char* it = source_string;
-	char* start = NULL;
 
 	LexerState lexer_state = STATE_REQUEST_LINE;
 	TokenType token_type = TOKEN_INITIAL;
 	Token* current_token = NULL;
-	ptrdiff_t keyword_size = 0;
 	char* crlf_endptr = NULL;
 	
 	/*
@@ -81,9 +78,40 @@ TokenList* build_token_list(char* source_string, const char* end_of_buf) {
 					lexer_state = STATE_INVALID; // fallback to invalid state if no CRLF 
 				}
 				lexer_state = STATE_HEADERS; 
-
 				break;
 			case STATE_HEADERS:
+        if ( it+4 >= end_of_buf ) 
+        {
+          lexer_state=STATE_INVALID;
+        }
+        snprintf(buf,sizeof(buf),"%.*s",4,it);
+
+        // entrypoint for header key/value pair extraction
+        if ( strcmp(buf, "\r\n\r\n") == 0 ) 
+        {
+          lexer_state=STATE_BODY;
+        } 
+        else 
+        {
+          //key extraction
+          extract_next_header_key(buf,sizeof(buf), end_of_buf, &it);
+					token_type = tokenize_string(buf, lut); //static, because header keys are static
+					current_token = create_token(buf, token_type); 
+					add_token_to_list(tl, current_token);
+          //value extraction
+          extract_next_header_value(buf,sizeof(buf), end_of_buf, &it);
+					token_type = TOKEN_HEADER_VALUE; //dynamically typed
+					current_token = create_token(buf, token_type); 
+					add_token_to_list(tl, current_token);
+          
+          if ( *it == '\r' && *(it+1) == '\n' ) 
+          {
+            token_type=TOKEN_CRLF;
+            current_token = create_token("\r\n", token_type);
+            add_token_to_list(tl, current_token);
+          }
+        }
+        /*
 				crlf_endptr = it + 4; //a double CRLF is four characters wide
 				if (crlf_endptr > end_of_buf) { // check if endptr is within bounds
 					printf("Buffer overread detected! Tokenization ending...\n");
@@ -132,6 +160,7 @@ TokenList* build_token_list(char* source_string, const char* end_of_buf) {
 						}
 					}
 				}
+        */
 				break;
 			case STATE_BODY:
 				printf("DOUBLE CRLF DETECTED\n");
