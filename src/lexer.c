@@ -5,9 +5,9 @@
 #include <stddef.h> 	// For ptrdiff_t
 #include <curl/curl.h>	// For curl_url tools (URI validation)
 
-#include "lexer.h" 	// Header file for the lexer components and token/token_list data types
+#include "lexer.h" 	  // Header file for the lexer components and token/token_list data types
 #include "hashmap.h"	// Header file for the hashmap implementation in the tokenization
-#include "buffer.h"
+#include "buffer.h"   // next keyword extraction tools
 
 #define BUF_SIZE 1024 	// maximum buffer size of 1024 bytes
 
@@ -85,6 +85,7 @@ TokenList* build_token_list(char* source_string, const char* end_of_buf) {
           lexer_state=STATE_INVALID;
         }
         snprintf(buf,sizeof(buf),"%.*s",4,it);
+
 
         // entrypoint for header key/value pair extraction
         if ( strcmp(buf, "\r\n\r\n") == 0 ) 
