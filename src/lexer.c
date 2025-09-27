@@ -193,6 +193,7 @@ void delete_token_list(TokenList* tl) {
 void print_token_list(TokenList* tl) {
 	if (tl->size == 0) {
 		printf("Token list is empty.");
+    return;
 	} 
 
 	printf("Size of token list: %zu\n", tl->size);
