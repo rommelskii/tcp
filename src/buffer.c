@@ -83,10 +83,6 @@ int extract_body(char* buf, size_t buf_size, char* end_of_buf, char** it_ptr) {
   {
     ++it;
   }
-  if (it != end_of_buf) 
-  {
-    return 0;
-  }
   ptrdiff_t length = it - start;
   snprintf(buf,buf_size,"%.*s",(int)length,start);
   *it_ptr = it;

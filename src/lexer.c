@@ -94,6 +94,7 @@ TokenList* build_token_list(char* source_string, const char* end_of_buf) {
           current_token = create_token("\r\n", token_type);
           add_token_to_list(tl, current_token); // additional CRLF since one comes from the prev
           lexer_state=STATE_BODY;
+          it += 4; // advance over the double CRLF
         } 
         else 
         {
@@ -120,7 +121,14 @@ TokenList* build_token_list(char* source_string, const char* end_of_buf) {
         //we process the BODY until it reaches the base case where
         //iterator >= end_of_buf
         extract_body(buf, sizeof(buf), end_of_buf, &it);
+        token_type = TOKEN_BODY;
+        current_token = create_token(buf, token_type);
+        add_token_to_list(tl, current_token);
         printf("Done tokenization\n");
+        while (it < end_of_buf || *it !='\0') 
+        {
+          ++it;    
+        }
 				break;
 			case STATE_INVALID:
 				++it;
