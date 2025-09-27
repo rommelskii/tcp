@@ -5,9 +5,26 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "hashmap.h"
+#include "lexer.h"
+
 #define PORT 8080
 #define BACKLOG 10 //10 maximum in queue
 #define BUFFER_SIZE 1024		   
+
+/*
+void test_tokenize() {
+	HashMap* lut = lut_create();	
+	char* src = "GET http://localhost:8080 HTTP/1.1";
+	TokenList* tl = build_token_list(src);
+
+	print_token_list(tl);
+}
+
+int main(void) {
+	test_tokenize();
+}
+*/
 
 int main() {
 	struct sockaddr_in address; 
@@ -62,8 +79,16 @@ int main() {
 		}
 
 		ssize_t bytes_received = recv(new_socket, buf, BUFFER_SIZE, 0);
-		printf("Bytes received: %li\nContent: %s\n", bytes_received, buf);
-
+		if ( bytes_received > 0 ) {
+			buf[bytes_received] = '\0';
+			const char* end_of_buffer = buf+bytes_received;
+			TokenList* tl = build_token_list(buf, end_of_buffer);
+			print_token_list(tl);
+      //printf("%s\n", buf);
+		} else {
+			perror("recv failed");
+		}
+		//printf("Bytes received: %li\nContent: %s\n", bytes_received, buf);
 
 		close(new_socket);
 
