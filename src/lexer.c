@@ -117,16 +117,17 @@ TokenList* build_token_list(char* source_string, const char* end_of_buf) {
         }
 				break;
 			case STATE_BODY:
-				++it;
-				break;
-			case STATE_END_OF_HEADERS:
+        //we process the BODY until it reaches the base case where
+        //iterator >= end_of_buf
+        extract_body(buf, sizeof(buf), end_of_buf, &it);
+        printf("Done tokenization\n");
 				break;
 			case STATE_INVALID:
 				++it;
 				break;
 		}
 	}
-
+  hashmap_destroy(lut); //free the LUT for tokenization
 	return tl;
 }
 
@@ -217,9 +218,6 @@ void print_token_list(TokenList* tl) {
 				break;
 			case TOKEN_CRLF:
 				printf("String: (crlf) Type: CRLF\n");
-				break;
-			case TOKEN_END_OF_HEADERS:
-				printf("String: %s Type: End of Headers\n", it->str);
 				break;
 			case TOKEN_EOF:
 				printf("String: %s Type: EOF\n", it->str);
