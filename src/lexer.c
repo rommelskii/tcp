@@ -90,6 +90,9 @@ TokenList* build_token_list(char* source_string, const char* end_of_buf) {
         // entrypoint for header key/value pair extraction
         if ( strcmp(buf, "\r\n\r\n") == 0 ) 
         {
+          token_type = TOKEN_CRLF;
+          current_token = create_token("\r\n", token_type);
+          add_token_to_list(tl, current_token); // additional CRLF since one comes from the prev
           lexer_state=STATE_BODY;
         } 
         else 
