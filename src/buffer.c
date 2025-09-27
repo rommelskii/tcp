@@ -7,7 +7,7 @@
 
 #define MAX_BUFFER_SIZE 1024
 
-int extract_next_keyword(char* buf, size_t buf_size, char* end_of_buf, char** it_ptr)
+int extract_next_keyword(char* buf, size_t buf_size, const char* end_of_buf, char** it_ptr)
 {
   char* it = *it_ptr;
   while ( it < end_of_buf && isspace(*it) )
@@ -30,7 +30,7 @@ int extract_next_keyword(char* buf, size_t buf_size, char* end_of_buf, char** it
   return 1;
 }
 
-int extract_next_header_key(char* buf, size_t buf_size, char* end_of_buf, char** it_ptr)
+int extract_next_header_key(char* buf, size_t buf_size, const char* end_of_buf, char** it_ptr)
 {
   char* it = *it_ptr;
   while ( it < end_of_buf && isspace(*it) )
@@ -54,7 +54,7 @@ int extract_next_header_key(char* buf, size_t buf_size, char* end_of_buf, char**
   return 1;
 }
 
-int extract_next_header_value(char* buf, size_t buf_size, char* end_of_buf, char** it_ptr)
+int extract_next_header_value(char* buf, size_t buf_size, const char* end_of_buf, char** it_ptr)
 {
   char* it = *it_ptr;
 
@@ -76,7 +76,7 @@ int extract_next_header_value(char* buf, size_t buf_size, char* end_of_buf, char
   return 1;
 }
 
-int extract_body(char* buf, size_t buf_size, char* end_of_buf, char** it_ptr) {
+int extract_body(char* buf, size_t buf_size, const char* end_of_buf, char** it_ptr) {
   char* it = *it_ptr;
   char* start = it;
   while (it < end_of_buf)

@@ -82,9 +82,9 @@ int main() {
 		if ( bytes_received > 0 ) {
 			buf[bytes_received] = '\0';
 			const char* end_of_buffer = buf+bytes_received;
-			TokenList* tl = build_token_list(buf, end_of_buffer); // lexer
+			TokenList* tl = build_token_list(buf, end_of_buffer);
 			print_token_list(tl);
-      printf("%s\n", buf);
+      //printf("%s\n", buf);
 		} else {
 			perror("recv failed");
 		}

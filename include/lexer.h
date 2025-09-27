@@ -2,7 +2,7 @@
 #define LEXER_H
 
 
-/*
+/**
  * file: lexer.h
  * description: header file for the lexer with definitions
  *              of the tokens, token lists, and the helper functions for creating the said structures.
@@ -10,6 +10,9 @@
 
 typedef struct HashMap HashMap;
 
+/**
+ * @brief An enumeration of the possible lexer states/stages.
+ */
 typedef enum {
 	STATE_REQUEST_LINE,
 	STATE_HEADERS,
@@ -19,7 +22,6 @@ typedef enum {
 
 /**
  * @brief An enumeration of the possible token types of inbound HTTP requests.
- * Still in prototyping stage.
  */
 
 typedef enum {
@@ -39,7 +41,6 @@ typedef enum {
 
 /**
  * @brief An abstract data type for a token.
- *
  */
 
 typedef struct Token {
@@ -61,22 +62,17 @@ typedef struct {
 	size_t size;
 } TokenList;
 
-int is_uri(char* str);
-
 /**
  * @brief Creates a token list. 
  * @return A pointer to the newly created token list.
  */
 TokenList* 	create_token_list();
 
-/**
- * @brief Creates a token list from a null-terminated source string.
- *
- * This function utilizes the lexer in determining the token type.
- *
- * @param source_string A pointer to a null-terminated character array/string. 
- * @param end_of_buffer A pointer to the end of the buffer based on the bytes received by recv
- * @return A pointer to the newly created token list.
+/*
+ * @brief Converts a valid C string to a linked list of tokens.
+ * @param source_string Valid C string to be converted.
+ * @param end_of_buf  Pointer to the end of the buffer (dictated by the number of bytes received)
+ * @return A pointer to the tokenized string.
  */
 TokenList* 	build_token_list(char* source_string, const char* end_of_buffer);
 
@@ -103,8 +99,17 @@ Token* 		add_token_to_list(TokenList* token_list, Token* token);
  */
 void 		delete_token_list(TokenList* tl);
 
+/**
+ * @brief Outputs the content and corresponding token type of a non-empty token list.
+ * @param tl The pointer to the token list to be printed.
+ */
 void 		print_token_list(TokenList* tl);
 
+/**
+ * @brief Wrapper function around the hashmap_get for checking the token type of a keyword.
+ * @param buf Pointer to the buffer containing the keyword to be tokenized.
+ * @param lut Pointer to the HashMap object acting as the LUT created by lut_create()
+ */
 TokenType	tokenize_string(char* buf, HashMap* lut);
 
 #endif // LEXER_H

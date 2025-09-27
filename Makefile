@@ -24,7 +24,6 @@ all: $(TARGET)
 # Rule to link the final executable.
 $(TARGET): $(OBJECTS)
 	@mkdir -p $(BINDIR)
-	# UPDATE THIS LINE to include the linker libraries
 	$(CC) $(OBJECTS) -o $(TARGET) $(LDLIBS)
 	@echo "Linking complete. Executable is at $(TARGET)"
 

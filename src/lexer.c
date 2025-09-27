@@ -11,6 +11,11 @@
 
 #define BUF_SIZE 1024 	// maximum buffer size of 1024 bytes
 
+
+/*
+ * @brief Initializes an empty token list.
+ * @return Pointer to the initialized empty token list.
+ */
 TokenList* create_token_list() {
 	TokenList* tl = (TokenList*)malloc(sizeof(TokenList));
 	tl->head = NULL;
@@ -19,9 +24,6 @@ TokenList* create_token_list() {
 	return tl;
 }
 
-/*
- * @brief Tokenization entry point
- */
 TokenList* build_token_list(char* source_string, const char* end_of_buf) {
 	TokenList* tl = create_token_list(); // initialize token list
 	HashMap* lut = lut_create();
@@ -38,7 +40,6 @@ TokenList* build_token_list(char* source_string, const char* end_of_buf) {
 	LexerState lexer_state = STATE_REQUEST_LINE;
 	TokenType token_type = TOKEN_INITIAL;
 	Token* current_token = NULL;
-	char* crlf_endptr = NULL;
 	
 	/*
 	 * Tokenization entry point
@@ -80,14 +81,17 @@ TokenList* build_token_list(char* source_string, const char* end_of_buf) {
 				lexer_state = STATE_HEADERS; 
 				break;
 			case STATE_HEADERS:
+        /*
+          * Stage 2: Header Lines
+          * (HEADER KEY): (HEADER VALUE)(CRLF)
+          * Base case: double crlf or EOB
+        */
         if ( it+4 >= end_of_buf ) 
         {
           lexer_state=STATE_INVALID;
         }
         snprintf(buf,sizeof(buf),"%.*s",4,it);
 
-
-        // entrypoint for header key/value pair extraction
         if ( strcmp(buf, "\r\n\r\n") == 0 ) 
         {
           token_type = TOKEN_CRLF;
@@ -96,16 +100,16 @@ TokenList* build_token_list(char* source_string, const char* end_of_buf) {
           lexer_state=STATE_BODY;
           it += 4; // advance over the double CRLF
         } 
-        else 
+        else //actual entrypoint for key/value extraction
         {
           //key extraction
           extract_next_header_key(buf,sizeof(buf), end_of_buf, &it);
-					token_type = tokenize_string(buf, lut); //static, because header keys are static
+					token_type = tokenize_string(buf, lut); //keys can only take a fixed set of types
 					current_token = create_token(buf, token_type); 
 					add_token_to_list(tl, current_token);
           //value extraction
           extract_next_header_value(buf,sizeof(buf), end_of_buf, &it);
-					token_type = TOKEN_HEADER_VALUE; //dynamically typed
+					token_type = TOKEN_HEADER_VALUE; //can be anything, so header value in general
 					current_token = create_token(buf, token_type); 
 					add_token_to_list(tl, current_token);
           
@@ -118,8 +122,8 @@ TokenList* build_token_list(char* source_string, const char* end_of_buf) {
         }
 				break;
 			case STATE_BODY:
-        //we process the BODY until it reaches the base case where
-        //iterator >= end_of_buf
+        //copy all contents after the double CRLF to the end of the buffer
+        //and set it as the body
         extract_body(buf, sizeof(buf), end_of_buf, &it);
         token_type = TOKEN_BODY;
         current_token = create_token(buf, token_type);
@@ -131,11 +135,12 @@ TokenList* build_token_list(char* source_string, const char* end_of_buf) {
         }
 				break;
 			case STATE_INVALID:
-				++it;
+        hashmap_destroy(lut); // immediately free the LUT if state is invalid
+        return NULL;
 				break;
 		}
 	}
-  hashmap_destroy(lut); //free the LUT for tokenization
+  hashmap_destroy(lut); //free the LUT after using
 	return tl;
 }
 
@@ -230,6 +235,9 @@ void print_token_list(TokenList* tl) {
 				break;
 			case TOKEN_EOF:
 				printf("String: %s Type: EOF\n", it->str);
+				break;
+			case TOKEN_INITIAL: // not really possible
+				printf("String: (initial token) Type: Initial\n");
 				break;
 			case TOKEN_ILLEGAL:
 				printf("String: %s Type: Illegal\n", it->str);
