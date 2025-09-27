@@ -112,59 +112,8 @@ TokenList* build_token_list(char* source_string, const char* end_of_buf) {
             add_token_to_list(tl, current_token);
           }
         }
-        /*
-				crlf_endptr = it + 4; //a double CRLF is four characters wide
-				if (crlf_endptr > end_of_buf) { // check if endptr is within bounds
-					printf("Buffer overread detected! Tokenization ending...\n");
-					lexer_state = STATE_INVALID;
-				}
-				snprintf(buf,sizeof(buf),"%.*s", 4, it);
-				if ( strcmp(buf, "\r\n\r\n") == 0 ) {
-					lexer_state = STATE_BODY;
-				} else {
-					while ( isspace(*it) && it < end_of_buf ) {
-						++it;
-					}
-					start=it;
-					while ( *it != ':' && it < end_of_buf ) {
-						++it;
-					}
-					if (it < end_of_buf) {
-						keyword_size = it - start;
-						snprintf(buf, sizeof(buf), "%.*s", keyword_size, start);
-						token_type = tokenize_string(buf, lut);
-						current_token = create_token(buf, token_type);
-						add_token_to_list(tl, current_token);
-						++it;
-					}
-					while ( isspace(*it) && it < end_of_buf ) {
-						++it;
-					}
-					if (it < end_of_buf) {
-						start=it;
-						while ( !isspace(*it) && it < end_of_buf ) {
-							++it;
-						}
-						keyword_size = it - start;
-						snprintf(buf, sizeof(buf), "%.*s", keyword_size, start);
-						token_type = TOKEN_HEADER_VALUE;
-						current_token = create_token(buf, token_type);
-						add_token_to_list(tl, current_token);
-					}
-					if (it+1 < end_of_buf) {
-						if ( *it=='\r' && *(it+1)=='\n' ) {
-							token_type = TOKEN_CRLF;	
-							current_token = create_token("\r\n", token_type);
-							add_token_to_list(tl, current_token);
-						} else {
-							lexer_state = STATE_INVALID;
-						}
-					}
-				}
-        */
 				break;
 			case STATE_BODY:
-				printf("DOUBLE CRLF DETECTED\n");
 				++it;
 				break;
 			case STATE_END_OF_HEADERS:
